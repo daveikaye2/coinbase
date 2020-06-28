@@ -2,11 +2,13 @@ package com.kayeconsulting;
 
 import org.knowm.xchange.Exchange;
 import org.knowm.xchange.ExchangeFactory;
+import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.coinbasepro.CoinbaseProExchange;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.Ticker;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 public class BtcPriceMonitor {
 
@@ -15,16 +17,27 @@ public class BtcPriceMonitor {
 
     public BtcPriceMonitor() {
         this.slack = new Slack();
-        this.coinbasePro = ExchangeFactory.INSTANCE.createExchange(CoinbaseProExchange.class);
+
+        ExchangeSpecification specification = new ExchangeSpecification(CoinbaseProExchange.class);
+        specification.setApiKey(System.getenv("COINBASE_API_KEY"));
+        specification.setSecretKey(System.getenv("COINBASE_SECRET_KEY"));
+        specification.setExchangeSpecificParametersItem("passphrase", System.getenv("COINBASE_PASSPHRASE"));
+        this.coinbasePro = ExchangeFactory.INSTANCE.createExchange(specification);
     }
 
     public void monitor() {
-        try {
-            Ticker ticker = coinbasePro.getMarketDataService().getTicker(CurrencyPair.BTC_USD);
-
-            slack.sendMessage(ticker);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        while(true) {
+            try {
+                Ticker ticker = coinbasePro.getMarketDataService().getTicker(CurrencyPair.BTC_USD);
+                BigDecimal bid = ticker.getBid();
+                if (bid.compareTo(new BigDecimal("8800")) > 0) {
+                    slack.sendMessage(ticker);
+                    break;
+                }
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
