@@ -6,8 +6,8 @@ import org.knowm.xchange.ExchangeSpecification;
 import org.knowm.xchange.coinbasepro.CoinbaseProExchange;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.marketdata.Ticker;
+import org.knowm.xchange.service.marketdata.MarketDataService;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 
 public class BtcPriceMonitor {
@@ -26,11 +26,12 @@ public class BtcPriceMonitor {
     }
 
     public void monitor() {
+        MarketDataService marketDataService = coinbasePro.getMarketDataService();
         while(true) {
             try {
-                Ticker ticker = coinbasePro.getMarketDataService().getTicker(CurrencyPair.BTC_USD);
+                Ticker ticker = marketDataService.getTicker(CurrencyPair.BTC_USD);
                 BigDecimal bid = ticker.getBid();
-                if (bid.compareTo(new BigDecimal("8800")) > 0) {
+                if (bid.compareTo(new BigDecimal("9200")) >= 0) {
                     slack.sendMessage(ticker);
                     break;
                 }
