@@ -1,29 +1,34 @@
 package com.kayeconsulting;
 
+import com.slack.api.methods.MethodsClient;
+import com.slack.api.methods.request.chat.ChatPostMessageRequest;
+import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import org.knowm.xchange.dto.marketdata.Ticker;
-
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 public class Slack {
 
-    private final String slackWebhookUrlStr;
+    private final String token;
     private final DateUtils dateUtils;
 
     public Slack() {
-        slackWebhookUrlStr = System.getenv("SLACK_WEB_HOOK_MISC_POST_URL");
+        token = System.getenv("SLACK_COINBASE_BOT_TOKEN");
         dateUtils = new DateUtils();
     }
 
-    public Response sendMessage(Ticker ticker) {
-        Client client = ClientBuilder.newClient();
-        WebTarget slackWebhookUrl = client.target(slackWebhookUrlStr);
-        Invocation.Builder slackInvocationBuilder = slackWebhookUrl.request(MediaType.APPLICATION_JSON);
-        ticker.getTimestamp();
-        String message = "{'text':'"+ dateUtils.toString(ticker.getTimestamp())+": "+ticker+"'}";
+    public ChatPostMessageResponse sendMessage(Ticker ticker) {
+        try {
+            com.slack.api.Slack slack = com.slack.api.Slack.getInstance();
+            MethodsClient methods = slack.methods(token);
+            ChatPostMessageRequest request = ChatPostMessageRequest.builder()
+                    .channel("U015U0UCQQN")
+                    .text("<@U015U0UCQQN|David> "+ticker.toString())
+                    .build();
 
-        return slackInvocationBuilder.post(Entity.entity(message, MediaType.APPLICATION_JSON));
+            return methods.chatPostMessage(request);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 }

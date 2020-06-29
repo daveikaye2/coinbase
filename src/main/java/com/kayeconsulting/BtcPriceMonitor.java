@@ -31,7 +31,7 @@ public class BtcPriceMonitor {
             try {
                 Ticker ticker = marketDataService.getTicker(CurrencyPair.BTC_USD);
                 BigDecimal bid = ticker.getBid();
-                if (bid.compareTo(new BigDecimal("9200")) >= 0) {
+                if (bid.compareTo(new BigDecimal("200")) >= 0) {
                     slack.sendMessage(ticker);
                     break;
                 }
